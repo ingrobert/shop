@@ -1,9 +1,13 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
-import { fetchWeather } from '../actions/index';
+import { fetchItems } from '../actions/index';
 
 class Inventory extends Component {
+  componentWillMount() {
+    this.props.fetchItems();
+  }
+
   constructor(props) {
     super(props);
 
@@ -19,16 +23,24 @@ class Inventory extends Component {
   }
 
   renderInventory() {
-    return this.props.allItems.map((item) => {
+    if (this.props.allItems.length > 0) {
+      return this.props.allItems.map((item) => {
+        return (
+          <div key={item.itemName}>
+            <li>{item.itemName}</li>
+            <li>{item.price}</li>
+            <li>{item.description}</li>
+            <li>{this.renderTaxable(item)}</li>
+          </div>
+        );
+      });
+    } else {
       return (
-        <div key={item.itemName}>
-          <li>{item.itemName}</li>
-          <li>{item.price}</li>
-          <li>{item.description}</li>
-          <li>{this.renderTaxable(item)}</li>
-      </div>
+        <div>
+          No Items...consider adding a few!
+        </div>
       );
-    });
+    }
   }
 
   render() {
@@ -45,4 +57,9 @@ function mapStateToProps(state) {
     allItems: state.allItems
   };
 }
-export default connect(mapStateToProps)(Inventory);
+
+function mapDispatchToProps(dispatch) {
+  return bindActionCreators({fetchItems}, dispatch);
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Inventory);

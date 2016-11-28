@@ -1,8 +1,15 @@
-export default function() {
-  return [
-    {itemName: 'Item1', price: 101, description: 'here is a description', taxable: true},
-    {itemName: 'Item2', price: 101, description: 'here is a description', taxable: true},
-    {itemName: 'Item3', price: 101, description: 'here is a description', taxable: false},
-    {itemName: 'Item4', price: 1, description: 'here is a description', taxable: true}
-  ];
+import { FETCH_ITEMS, ADD_ITEM } from '../actions/index';
+
+const INITIAL_STATE = [];
+
+export default function(state = INITIAL_STATE, action) {
+  switch(action.type) {
+    case FETCH_ITEMS:
+      //in the future, add a remote server and change spread
+      return [...state, ...action.payload];
+    case ADD_ITEM:
+      return [...state, action.payload];
+    default:
+      return state;
+  }
 }
