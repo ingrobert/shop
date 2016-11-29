@@ -1,3 +1,15 @@
 .app {
   margin-top: 2rem;
 }
+.btn-submit-item{
+  margin-top: 1rem;
+}
+
+.validation-error {
+  font-weight: 700;
+  color: red;
+}
+
+.taxable-label {
+  margin-right: 1rem;
+}

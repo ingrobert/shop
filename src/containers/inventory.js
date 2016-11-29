@@ -17,7 +17,7 @@ class Inventory extends Component {
   }
 
   renderTaxable(taxable) {
-    return taxable ? 'Yes' : 'No';
+    return taxable === 'true' ? "Yes" : "No";
   }
 
   renderDateAvailable(date) {

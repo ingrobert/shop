@@ -8,12 +8,18 @@ import moment from 'moment';
 import _ from 'lodash';
 import uuid from 'uuid';
 
+const FIELDS = {
+  itemName: { label: 'Item Name', type: 'input'},
+  price: { label: 'Item Price (in cents)', type: 'input'},
+  description: { label: 'Item Description', type: 'input'}
+};
+
 class InventoryForm extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      startDate: moment()
+      startDate: null
     };
   }
 
@@ -25,69 +31,51 @@ class InventoryForm extends Component {
     }
   }
 
-  addItem(event) {
-    event.preventDefault();
-    const newItem = {
-      itemName: this.itemName.value,
-      price: this.price.value,
-      description: this.description.value,
-      taxable: this.taxable.value,
-      dateAvailable: this.state.startDate,
-      id: uuid()
-    };
-    if (this.validate(newItem)) {
-      this.props.addItem(newItem);
-    }
+  addItem(props) {
+    var newItem = props;
+    props.taxable = this.taxable.value;
+    props.id = uuid();
+    this.props.addItem(props);
+    this.props.resetForm();
+    this.setState({ startDate: null });
   }
 
-  renderField(field) {
+  renderField(fieldConfig, field) {
+    const fieldHelper = this.props.fields[field];
+
     return (
-      <div key={field.label}>
-        <label>{field.label}</label>
-        <input
-          className="form-control"
-          ref={(input) => this[field.property] = input}
-          type={field.inputType} />
-          {this.state.errors[field]}
+      <div key={fieldConfig.label} className="form-group">
+        <label>{fieldConfig.label}</label>
+        <fieldConfig.type type={fieldConfig.inputType} {...fieldHelper}
+          className="form-control"/>
+        <span className={`${fieldHelper.touched && fieldHelper.invalid ? 'validation-error' : ''}`} >
+          {fieldHelper.touched ? fieldHelper.error : ''}
+        </span>
       </div>
     );
   }
 
-  validate(item) {
-    if (!item.itemName) {
-      this.setState({errors['itemName']: 'Fill in a name'});
-    }
-    // if (!item.price || isNaN(item.price)) {
-      // this.setState(errors.itemName, 'Fill in a name');
-      // errors.price = "Fill in a price with only numbers";
-    // }
-    // if (!item.description) {
-      // errors.description = "Fill in a description";
-    // }
-    // if (!item.dateAvailable) {
-      // errors.dateAvailable = "Fill in a date";
-    // }
-  }
-
   render() {
-    const fields = {
-      itemName: { label: 'Item Name', property: 'itemName', inputType: 'text'},
-      price: { label: 'Item Price (in cents)', property: 'price', inputType: 'text'},
-      description: { label: 'Item Description', property: 'description', inputType: 'text'},
-      taxable: { label: 'Taxable?', property: 'taxable', inputType: 'checkbox'}
-    };
+    const {  fields: {taxable, dateAvailable}, handleSubmit } = this.props;
 
     return (
-      <form onSubmit={this.addItem.bind(this)}>
-        <div className="input-group input-group">
-          {_.map(fields, this.renderField.bind(this))}
-          <label>Available Date</label><br />
-          <DatePicker
-            selected={this.state.startDate}
-            onChange={this.handleDateChange.bind(this)}
-            className="form-control"/>
+      <form onSubmit={handleSubmit(this.addItem.bind(this))}>
+        {_.map(FIELDS, this.renderField.bind(this))}
+        <label className="taxable-label">Taxable?</label>
+        <input className="taxable-checkbox" type="checkbox"  {...taxable}
+          ref={(input) => this.taxable = input} />
+        <div>
+          <label>First Date Available</label>
         </div>
-        <button type="submit" className="btn btn-primary">Submit</button>
+        <DatePicker {...dateAvailable}
+          selected={this.state.startDate}
+          onChange={this.handleDateChange.bind(this)}/>
+          <br />
+          <span className={`${dateAvailable.touched && dateAvailable.invalid ? 'validation-error' : ''}`} >
+            {dateAvailable.touched ? dateAvailable.error : ''}
+          </span>
+          <br/>
+        <button type="submit" className="btn btn-primary btn-submit-item">Submit</button>
       </form>
     );
   }
@@ -97,4 +85,25 @@ function mapDispatchToProps(dispatch) {
   return bindActionCreators({addItem}, dispatch);
 }
 
-export default connect(null, mapDispatchToProps)(InventoryForm);
+function validate(values) {
+  const errors = {};
+  _.each(FIELDS, (type, field) => {
+    if (!values[field]) {
+      errors[field] = `Enter a ${field}`;
+    }
+  });
+  if (values.price && isNaN(values.price)) {
+    errors.price = 'Please enter only numbers';
+  }
+  if (!values.dateAvailable) {
+    errors.dateAvailable = 'Please enter a date';
+  }
+
+  return errors;
+}
+
+export default reduxForm({
+  form: 'InventoryForm',
+  fields: _.keys(FIELDS).concat('taxable', 'dateAvailable'),
+  validate
+}, null, { addItem })(InventoryForm);
