@@ -1,0 +1,16 @@
+name: Use Reusable Workflow
+
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  invoke_reusable_workflow:
+    uses: rmi22186/rmi22186.github.io/.github/workflows/auto-respond-close-issue.yml@master
+    with:
+      issue_number: ${{ github.event.issue.number }}
+      repository: ${{ github.repository }}
+      user_login: ${{ github.event.issue.user.login }}
+    secrets:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
